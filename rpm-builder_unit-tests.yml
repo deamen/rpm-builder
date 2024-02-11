@@ -1,0 +1,37 @@
+schemaVersion: '2.0.0'
+fileExistenceTests:
+  - name: "Check /usr/bin/rpmbuild exists"
+    path: "/usr/bin/rpmbuild"
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: "Check /root/rpmbuild/BUILD"
+    path: "/root/rpmbuild/BUILD"
+    shouldExist: true
+    permissions: 'drwxr-xr-x'
+    uid: 0
+    gid: 0
+  - name: "Check /root/rpmbuild/RPMS"
+    path: "/root/rpmbuild/RPMS"
+    shouldExist: true
+    permissions: 'drwxr-xr-x'
+    uid: 0
+    gid: 0
+  - name: "Check /root/rpmbuild/SOURCES"
+    path: "/root/rpmbuild/SOURCES"
+    shouldExist: true
+    permissions: 'drwxr-xr-x'
+    uid: 0
+    gid: 0
+  - name: "Check /root/rpmbuild/SPECS"
+    path: "/root/rpmbuild/SPECS"
+    shouldExist: true
+    permissions: 'drwxr-xr-x'
+    uid: 0
+    gid: 0
+  - name: "Check /root/rpmbuild/SRPMS"
+    path: "/root/rpmbuild/SRPMS"
+    shouldExist: true
+    permissions: 'drwxr-xr-x'
+    uid: 0
+    gid: 0
+

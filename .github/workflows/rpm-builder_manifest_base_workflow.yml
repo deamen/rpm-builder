@@ -1,0 +1,50 @@
+name: rpm-builder Manifest Base Workflow
+
+on:
+  workflow_call:
+    inputs:
+      distro:
+        required: true
+        type: string
+
+jobs:
+  build_and_push_rpm-builder_manifest:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #4.1.1
+
+    - name: Install buildah and qemu-user-static
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y buildah qemu-user-static
+
+    - name: Log in to the Container registry with buildah
+      run: |
+        buildah login \
+        --username ${{ secrets.REGISTRY_USERNAME }} \
+        --password ${{ secrets.REGISTRY_PASSWORD }} \
+        ${{ secrets.REGISTRY_SERVER }}
+
+    - name: Create the manifest
+      run: |
+        buildah manifest create rpm-builder-${{ inputs.distro }}
+    
+    - name: Set tag to date
+      run: echo TODAY=$(date +%Y%m%d) >> $GITHUB_ENV
+    
+    - name: Add the AMD64 image to the manifest
+      run: |
+        buildah manifest add rpm-builder-${{ inputs.distro }} \
+        docker://${{ secrets.REGISTRY_SERVER }}/${{ secrets.REGISTRY_NAMESPACE }}/rpm-builder-${{ inputs.distro }}-amd64:${{ env.TODAY }}
+
+    - name: Add the ARM64 image to the manifest
+      run: |
+        buildah manifest add rpm-builder-${{ inputs.distro }} \
+        docker://${{ secrets.REGISTRY_SERVER }}/${{ secrets.REGISTRY_NAMESPACE }}/rpm-builder-${{ inputs.distro }}-arm64:${{ env.TODAY }}
+
+    - name: Push the manifest to Container registry
+      run: |
+        buildah manifest push --all \
+        rpm-builder-${{ inputs.distro }} \
+        docker://${{ secrets.REGISTRY_SERVER }}/${{ secrets.REGISTRY_NAMESPACE }}/rpm-builder-${{ inputs.distro }}:${{ env.TODAY }}

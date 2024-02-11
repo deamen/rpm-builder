@@ -1,0 +1,58 @@
+name: rpm-builder Image Base Workflow
+
+on:
+  workflow_call:
+    inputs:
+      distro:
+        required: true
+        type: string
+
+jobs:
+  build_and_push_rpm-builder_image:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #4.1.1
+
+    - name: Install buildah and qemu-user-static
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y buildah qemu-user-static
+
+    - name: Build the rpm-builder image
+      run: |
+        buildah build \
+        --tag ${{ secrets.REGISTRY_SERVER }}/${{ secrets.REGISTRY_NAMESPACE }}/rpm-builder-${{ inputs.distro }}-${{ matrix.arch }}:${{ github.run_id }} \
+        --arch=${{ matrix.arch }} \
+        --file containerfiles/rpm-builder-${{ inputs.distro }}.containerfile
+
+    - name: Push the image to local docker daemon
+      run: |
+        buildah push \
+        ${{ secrets.REGISTRY_SERVER }}/${{ secrets.REGISTRY_NAMESPACE }}/rpm-builder-${{ inputs.distro }}-${{ matrix.arch }}:${{ github.run_id }} \
+        docker-daemon:rpm-builder-${{ inputs.distro }}-${{ matrix.arch }}:${{ github.run_id }}
+
+    - name: Run Unit tests on image
+      uses: plexsystems/container-structure-test-action@c0a028aa96e8e82ae35be556040340cbb3e280ca #v0.3.0
+      with:
+        image: rpm-builder-${{ inputs.distro }}-${{ matrix.arch }}:${{ github.run_id }}
+        # Has to be relative to the root of the repository
+        config: rpm-builder_unit-tests.yml
+      
+    - name: Log in to the Container registry with buildah
+      run: |
+        buildah login \
+        --username ${{ secrets.REGISTRY_USERNAME }} \
+        --password ${{ secrets.REGISTRY_PASSWORD }} \
+        ${{ secrets.REGISTRY_SERVER }}
+
+    - name: Set tag to date
+      run: echo TODAY=$(date +%Y%m%d) >> $GITHUB_ENV
+
+    - name: Push the image to Container registry with buildah
+      run: |
+        buildah push \
+        ${{ secrets.REGISTRY_SERVER }}/${{ secrets.REGISTRY_NAMESPACE }}/rpm-builder-${{ inputs.distro }}-${{ matrix.arch }}:${{ github.run_id }} \
+        ${{ secrets.REGISTRY_SERVER }}/${{ secrets.REGISTRY_NAMESPACE }}/rpm-builder-${{ inputs.distro }}-${{ matrix.arch }}:${{ env.TODAY }}

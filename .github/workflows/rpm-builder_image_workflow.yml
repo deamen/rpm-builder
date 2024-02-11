@@ -1,0 +1,38 @@
+name: rpm-builder Workflow
+
+on:
+  push:
+    branches: [ "master" ]
+    paths: 
+      - '**.sh'
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build_ubi_image:
+    uses: ./.github/workflows/rpm-builder_image_base_workflow.yml
+    with:
+      distro: ubi
+    # https://docs.github.com/en/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow
+    secrets: inherit
+
+  build_and_push_ubi_manifest:
+    uses: ./.github/workflows/rpm-builder_manifest_base_workflow.yml
+    with:
+      distro: ubi
+    secrets: inherit
+    needs: build_ubi_image
+
+  build_fedora_image:
+    uses: ./.github/workflows/rpm-builder_image_base_workflow.yml
+    with:
+      distro: fedora
+    secrets: inherit
+
+  build_and_push_fedora_manifest:
+    uses: ./.github/workflows/rpm-builder_manifest_base_workflow.yml
+    with:
+      distro: fedora
+    secrets: inherit
+    needs: build_fedora_image
