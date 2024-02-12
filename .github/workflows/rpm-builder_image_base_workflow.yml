@@ -39,7 +39,7 @@ jobs:
       with:
         image: rpm-builder-${{ inputs.distro }}-${{ matrix.arch }}:${{ github.run_id }}
         # Has to be relative to the root of the repository
-        config: rpm-builder_unit-tests.yml
+        config: tests/rpm-builder_unit-tests.yml
       
     - name: Log in to the Container registry with buildah
       run: |
