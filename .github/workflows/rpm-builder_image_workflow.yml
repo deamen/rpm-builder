@@ -4,7 +4,8 @@ on:
   push:
     branches: [ "master" ]
     paths: 
-      - '**.sh'
+      - 'containerfiles/**'
+      - '.github/workflows/rpm-builder_**.yml'
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:
